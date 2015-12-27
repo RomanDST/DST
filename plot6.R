@@ -17,7 +17,8 @@ png(filename='plot6.png')
 install.packages("ggplot2") 
 library(ggplot2)
 
-ggplot(data=DF, aes(x=year, y=Emissions)) + guides(fill=F) +  
+ggplot(data=DF, aes(x=year, y=Emissions)) + guides(fill=F) + 
+  geom_line(aes(group=1, col=Emissions)) + geom_point(aes(size=1, col=Emissions)) + 
   ggtitle('Total Emissions of Motor Vehicle Sources\nLos Angeles County, California vs. Baltimore City, Maryland') +  
   ylab(expression('PM'[2.5])) + xlab('Year') + theme(legend.position='none') + facet_grid(. ~ City) +  
   geom_text(aes(label=round(Emissions,0), size=1, hjust=0.5, vjust=-1)) 

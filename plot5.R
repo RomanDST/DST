@@ -12,6 +12,7 @@ install.packages("ggplot2")
 library(ggplot2)
 
 ggplot(data=MD.df, aes(x=year, y=Emissions)) + guides(fill=F) +  
+  geom_line(aes(group=1, col=Emissions)) + geom_point(aes(size=1, col=Emissions)) + 
   ggtitle('Total Emissions of Motor Vehicle Sources in Baltimore City, Maryland') +  
   ylab(expression('PM'[2.5])) + xlab('Year') + theme(legend.position='none') +  
   geom_text(aes(label=round(Emissions,0), size=1, hjust=0.5, vjust=2)) 

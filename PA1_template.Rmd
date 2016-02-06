@@ -1,0 +1,87 @@
+## Load data file
+cls = c("integer", "character", "integer")
+df <- read.csv("activity.csv", head=TRUE, colClasses=cls, na.strings="NA")
+head(df)
+
+## Rid off missing values
+df$date <- as.Date(df$date)
+df_ign <- subset(df, !is.na(df$steps))
+
+## Build a hystogram for daily total steps (ignoring missing data)
+dailysum <- tapply(df_ign$steps, df_ign$date, sum, na.rm=TRUE, simplify=T)
+dailysum <- dailysum[!is.na(dailysum)]
+
+hist(x=dailysum,
+     col="red",
+     breaks=20,
+     xlab="Daily total steps",
+     ylab="Frequency",
+     main="The distribution of daily total (missing data ignored)")
+     
+ 
+## Calculate mean and median
+mean(dailysum)
+median(dailysum)
+
+## Average daily activity pattern
+int_avg <- tapply(df_ign$steps, df_ign$interval, mean, na.rm=TRUE, simplify=T)
+df_ia <- data.frame(interval=as.integer(names(int_avg)), avg=int_avg)
+
+with(df_ia,
+     plot(interval,
+          avg,
+          type="l",
+          xlab="5-minute intervals",
+          ylab="average steps in the interval across all days"))
+
+
+## Find 5-minute interval containing maximum number of steps:
+max_steps <- max(df_ia$avg)
+df_ia[df_ia$avg == max_steps, ]
+
+## Total number of missing values
+sum(is.na(df$steps))
+
+## Fill in missing values using mean for affected 5-minute interval.
+df_impute <- df
+ndx <- is.na(df_impute$steps)
+int_avg <- tapply(df_ign$steps, df_ign$interval, mean, na.rm=TRUE, simplify=T)
+df_impute$steps[ndx] <- int_avg[as.character(df_impute$interval[ndx])]
+
+## Build a hystogram
+new_dailysum <- tapply(df_impute$steps, df_impute$date, sum, na.rm=TRUE, simplify=T)
+
+hist(x=new_dailysum,
+     col="red",
+     breaks=20,
+     xlab="daily steps",
+     ylab="frequency",
+     main="The distribution of daily total (with missing data imputed)")
+
+## Calculate mean and median
+mean(new_dailysum)
+median(new_dailysum)
+
+
+## Build a function to check if day a weekday or weekend
+is_weekday <- function(d) {
+    wd <- weekdays(d)
+    ifelse (wd == "Saturday" | wd == "Sunday", "weekend", "weekday")
+}
+
+## Apply the function
+wx <- sapply(df_impute$date, is_weekday)
+df_impute$wk <- as.factor(wx)
+head(df_impute)
+
+## Build time series plot
+wk_df <- aggregate(steps ~ wk+interval, data=df_impute, FUN=mean)
+
+library(lattice)
+xyplot(steps ~ interval | factor(wk),
+       layout = c(1, 2),
+       xlab="Interval",
+       ylab="Number of steps",
+       type="l",
+       lty=1,
+       data=wk_df)

@@ -1,13 +1,21 @@
-## Load data file
+#Reproducible Research: Peer assessment 1
+This document presents the results of peer assessments 1 of course Reproducible Research on coursera. This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+###Load data file
+```{r}
 cls = c("integer", "character", "integer")
 df <- read.csv("activity.csv", head=TRUE, colClasses=cls, na.strings="NA")
 head(df)
+```
 
-## Rid off missing values
+###Rid off missing values
+```{r}
 df$date <- as.Date(df$date)
 df_ign <- subset(df, !is.na(df$steps))
+```
 
-## Build a hystogram for daily total steps (ignoring missing data)
+###Build a hystogram for daily total steps (ignoring missing data)
+```{r}
 dailysum <- tapply(df_ign$steps, df_ign$date, sum, na.rm=TRUE, simplify=T)
 dailysum <- dailysum[!is.na(dailysum)]
 
@@ -17,13 +25,16 @@ hist(x=dailysum,
      xlab="Daily total steps",
      ylab="Frequency",
      main="The distribution of daily total (missing data ignored)")
-     
+```     
  
-## Calculate mean and median
+###Calculate mean and median
+```{r}
 mean(dailysum)
 median(dailysum)
+```
 
-## Average daily activity pattern
+###Average daily activity pattern
+```{r}
 int_avg <- tapply(df_ign$steps, df_ign$interval, mean, na.rm=TRUE, simplify=T)
 df_ia <- data.frame(interval=as.integer(names(int_avg)), avg=int_avg)
 
@@ -33,22 +44,29 @@ with(df_ia,
           type="l",
           xlab="5-minute intervals",
           ylab="average steps in the interval across all days"))
+```
 
-
-## Find 5-minute interval containing maximum number of steps:
+###Find 5-minute interval containing maximum number of steps:
+```{r}
 max_steps <- max(df_ia$avg)
 df_ia[df_ia$avg == max_steps, ]
+```
 
-## Total number of missing values
+###Total number of missing values
+```{r}
 sum(is.na(df$steps))
+```
 
-## Fill in missing values using mean for affected 5-minute interval.
+###Fill in missing values using mean for affected 5-minute interval.
+```{r}
 df_impute <- df
 ndx <- is.na(df_impute$steps)
 int_avg <- tapply(df_ign$steps, df_ign$interval, mean, na.rm=TRUE, simplify=T)
 df_impute$steps[ndx] <- int_avg[as.character(df_impute$interval[ndx])]
+```
 
-## Build a hystogram
+###Build a hystogram
+```{r}
 new_dailysum <- tapply(df_impute$steps, df_impute$date, sum, na.rm=TRUE, simplify=T)
 
 hist(x=new_dailysum,
@@ -57,24 +75,31 @@ hist(x=new_dailysum,
      xlab="daily steps",
      ylab="frequency",
      main="The distribution of daily total (with missing data imputed)")
+```
 
-## Calculate mean and median
+###Calculate mean and median
+```{r}
 mean(new_dailysum)
 median(new_dailysum)
+```
 
-
-## Build a function to check if day a weekday or weekend
+###Build a function to check if day a weekday or weekend
+```{r}
 is_weekday <- function(d) {
     wd <- weekdays(d)
     ifelse (wd == "Saturday" | wd == "Sunday", "weekend", "weekday")
 }
+```
 
-## Apply the function
+###Apply the function
+```{r}
 wx <- sapply(df_impute$date, is_weekday)
 df_impute$wk <- as.factor(wx)
 head(df_impute)
+```
 
-## Build time series plot
+###Build time series plot
+```{r}
 wk_df <- aggregate(steps ~ wk+interval, data=df_impute, FUN=mean)
 
 library(lattice)
@@ -85,3 +110,4 @@ xyplot(steps ~ interval | factor(wk),
        type="l",
        lty=1,
        data=wk_df)
+ ```      
